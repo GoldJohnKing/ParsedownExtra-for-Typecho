@@ -19,4 +19,5 @@
 - 由 kokororin 开发的 [typecho-plugin-Parsedown](https://github.com/kokororin/typecho-plugin-Parsedown "typecho-plugin-Parsedown") 已经一年半没更新了（截至2018-08-15），Parsedown 已经由那时的 1.6.0 更新至 1.8.0。
 - 本人也是 Typecho 用户，由于无法忍受 marked.js 的庞大加载体积（我的VPS带宽仅1M），因此在近期的博客重建过程中重制了这一插件，在更新 Parsedown 至最新版本的同时纳入了支持 Markdown 扩展语法的 Parsedown Extra。
 - 本插件只接管前台内容解析（文章内容，独立页面和评论），不会接管后台编辑器的解析。
+- TOC支持代码参考自mrgeneralgoo：https://github.com/mrgeneralgoo/typecho-markdown
 - 如在使用过程中发现 BUG，欢迎提交 Issue 共同讨论。
