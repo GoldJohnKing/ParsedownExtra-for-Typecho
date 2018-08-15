@@ -38,8 +38,58 @@ class ParsedownExtra_Plugin implements Typecho_Plugin_Interface
     {
 	require_once dirname(__FILE__) . '/Parsedown.php';
 	require_once dirname(__FILE__) . '/ParsedownExtra.php';
-        return ParsedownExtra::instance()
+        $content ParsedownExtra::instance()
             ->setBreaksEnabled(true)
             ->text($text);
+        return preg_match('#^<p> *\[TOC\]\s*</p>$#m', $content) ? self::buildToc($content) : $content;
     }
+
+    /**
+    * 增加TOC支持
+    * 代码参考自mrgeneralgoo：https://github.com/mrgeneralgoo/typecho-markdown
+    */
+    public static function buildToc($content)
+    {
+        $document    = new \DOMDocument();
+        $contentType = '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">';
+        $htmlStart   = '<html><head><meta charset="UTF-8"></head><body>';
+        $htmlEnd     = '</body></html>';
+        $document->loadHTML($contentType . $htmlStart . $content . $htmlEnd, LIBXML_COMPACT);
+        $xpath    = new \DOMXPath($document);
+        $elements = $xpath->query('//h1|//h2|//h3|//h4|//h5|//h6');
+        if ($elements->length === 0) {
+            return $content;
+        }
+        $tocContent   = '';
+        $lastPosition = 0;
+        foreach ($elements as $element) {
+            sscanf($element->tagName, 'h%d', $currentPosition);
+            if ($currentPosition > $lastPosition) {
+                // parents start
+                $tocContent .= '<ul>' . PHP_EOL;
+            } elseif ($currentPosition < $lastPosition) {
+                // Must have brother if style of title is right
+                // brother's grandchild end
+                // brother's child end
+                // brother end
+                $tocContent .= '</li></ul></li>' . PHP_EOL;
+            } else {
+                // brother end
+                $tocContent .= '</li>' . PHP_EOL;
+            }
+            if ($element->hasAttribute('id')) {
+                $id = $element->getAttribute('id');
+            } else {
+                $id = md5($element->textContent);
+                $element->setAttribute('id', $id);
+            }
+            // child start
+            $tocContent   .= '<li><a href="#' . $id . '">' . $element->textContent . '</a>' . PHP_EOL;
+            $lastPosition = $currentPosition;
+        }
+        // child end and parents end
+        $tocContent .= '</li></ul>';
+        return preg_replace(['#^<p> *\[TOC\]\s*</p>$#m', "#$contentType#", "#$htmlStart#", "#$htmlEnd#"], [$tocContent], $xpath->document->saveHTML());
+    }
+
 }
